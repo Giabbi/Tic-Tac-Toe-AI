@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
+import java.util.Queue;
 
 interface Player {
     char getSymbol();
@@ -100,6 +101,66 @@ class RandomAI implements AI {
     }
 }
 
+/**
+    "AI" that assignes priorities (or weightes) to different tiles and plays the tile with the highest one
+    which is represented by its position in the sequence queue. If two tiles have the same priority, a random
+    tile is picked to be on a higher position in the queue. The priority set now is the following:
+    center -> corners -> sides
+*/
+class Giancarlo_AI_Weighted implements AI {
+
+    private int firstPriority = 4;
+    // 0, 2, 6, 8
+    private List<Integer> secondPriority = new ArrayList<>();
+    // 1, 3, 5, 7
+    private List<Integer> lastPriority = new ArrayList<>();
+
+    private Queue<Integer> sequence = new LinkedList<>();
+
+
+    // Initialize first sequence
+    public Giancarlo_AI_Weighted() {
+        initializeSequence();
+    }
+
+    private void initializeSequence() {
+        // Initialize lists
+        secondPriority.add(0);
+        secondPriority.add(2);
+        secondPriority.add(6);
+        secondPriority.add(8);
+        lastPriority.add(1);
+        lastPriority.add(3);
+        lastPriority.add(5);
+        lastPriority.add(7);
+
+        sequence.add(firstPriority);
+
+        // Scramble the order of tiles with the same priority/weight
+        for (int i = 0; i < secondPriority.size(); i++) {
+            sequence.add(secondPriority.remove((int) (Math.random() * secondPriority.size())));
+
+        }
+
+        for (int i = 0; i < secondPriority.size(); i++) {
+            sequence.add(secondPriority.remove((int) (Math.random() * secondPriority.size())));
+        }
+    }
+
+    @Override
+    public int determineMove(TicTacToe game) {
+        while (true) {
+            for (int i = 0; i < sequence.size(); i++) {
+                // Play move from the sequence queue
+                if (game.isValidMove(sequence.peek())) return sequence.remove();
+                else sequence.remove();
+            }
+            // if queue is empty, then initialize it again
+            initializeSequence();
+        }
+    }
+}
+
 class TicTacToe {
     private char[] board;
     private List<Player> players;
@@ -114,6 +175,11 @@ class TicTacToe {
         players.add(player2);
     }
 
+    // Getter for board array; added by Giancarlo
+    public char[] getBoard() {
+        return board;
+    }
+    
     public void play() {
         while (true) {
             for (Player player : players) {
